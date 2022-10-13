@@ -29,6 +29,7 @@ impl Reader<'_> {
 
 fn read_list(reader: &mut Reader) -> Result<MalType, &'static str> {
     let end_val: &str;
+    let mut found_end_val = false;
     match reader.peek() {
         "(" => end_val = ")",
         "[" => end_val = "]",
@@ -40,6 +41,7 @@ fn read_list(reader: &mut Reader) -> Result<MalType, &'static str> {
     while reader.is_eof() == false {
         if reader.peek() == end_val {
             reader.next();
+            found_end_val = true;
             break;
         }
         match read_form(reader) {
@@ -48,9 +50,9 @@ fn read_list(reader: &mut Reader) -> Result<MalType, &'static str> {
         }
     }
     //println!("read_list returning list len={}",list.len());
-    if reader.is_eof() {
+    if !found_end_val {
         // TODO GEnerate Error messages!
-        return Err("EOF");
+        return Err("unbalanced list");
     }
     return Ok(MalType::List(list));
 }
