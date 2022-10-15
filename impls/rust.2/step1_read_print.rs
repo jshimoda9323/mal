@@ -45,7 +45,6 @@ fn main() {
                     Ok(out_str) => println!("{}", out_str),
                     Err(err_str) => println!("Error: {}", err_str)
                 }
-                    
             },
             Err(_) => continue,
         }

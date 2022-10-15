@@ -1,6 +1,6 @@
 pub enum MalType {
     List(Vec<MalType>),
-    Number(String),
+    Number(i64),
     Symbol(String),
     Str(String),
 }

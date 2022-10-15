@@ -62,16 +62,12 @@ fn read_atom(reader: &mut Reader) -> Result<MalType, &'static str> {
     let new_token = reader.peek().to_string();
     reader.next();
     match &new_token[0..1] {
-        "0" => Ok(MalType::Number(new_token)),
-        "1" => Ok(MalType::Number(new_token)),
-        "2" => Ok(MalType::Number(new_token)),
-        "3" => Ok(MalType::Number(new_token)),
-        "4" => Ok(MalType::Number(new_token)),
-        "5" => Ok(MalType::Number(new_token)),
-        "6" => Ok(MalType::Number(new_token)),
-        "7" => Ok(MalType::Number(new_token)),
-        "8" => Ok(MalType::Number(new_token)),
-        "9" => Ok(MalType::Number(new_token)),
+        "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => {
+            match new_token.parse::<i64>() {
+                Ok(val) => Ok(MalType::Number(val)),
+                Err(_parse_int_error) => Err("failed to convert string to integer")
+            }
+        }
         "\"" => {
             match new_token.len() {
                 1 => Err("unbalanced string"),
