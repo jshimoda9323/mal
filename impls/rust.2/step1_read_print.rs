@@ -7,15 +7,25 @@ mod reader;
 mod printer;
 
 use crate::printer::pr_str;
+use crate::maltypes::MalType;
+use crate::reader::read_str;
 
-fn print(buffer: String) {
-    println!("{}", buffer)
+fn print(mt: MalType) -> String {
+    return pr_str(&mt)
 }
 
-fn eval(buffer: &String) -> String {
-    match reader::read_str(buffer) {
-        Ok(obj) => pr_str(&obj),
-        Err(err_str) => err_str.to_string(),
+fn eval(mt: MalType) -> MalType {
+    return mt
+}
+
+fn read(buffer: String) -> Result<MalType, &'static str> {
+    return read_str(buffer);
+}
+
+fn rep(buffer: String) -> Result<String, &'static str> {
+    match read(buffer) {
+        Ok(mt) => Ok(print(eval(mt))),
+        Err(err_str) => Err(err_str)
     }
 }
 
@@ -26,13 +36,16 @@ fn main() {
         let mut buffer = String::new();
         match stdin().read_line(&mut buffer) {
             Ok(n) => {
+                /* Catch a CTRL-d */
                 if n == 0 {
                     println!("");
                     break;
                 }
-                //println!("main: buffer='{}'",&buffer);
-                let outline = eval(&buffer.trim_end().to_string());
-                print(outline)
+                match rep(buffer.trim_end().to_string()) {
+                    Ok(out_str) => println!("{}", out_str),
+                    Err(err_str) => println!("Error: {}", err_str)
+                }
+                    
             },
             Err(_) => continue,
         }

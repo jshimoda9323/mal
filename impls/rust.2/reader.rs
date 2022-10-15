@@ -115,8 +115,8 @@ fn tokenize<'a>(buffer: &'a str) -> Vec<&'a str> {
     return ret
 }
 
-pub fn read_str(buffer: &str) -> Result<MalType, &'static str> {
-    let tokens = tokenize(buffer);
+pub fn read_str(buffer: String) -> Result<MalType, &'static str> {
+    let tokens = tokenize(&buffer);
     //let mut reader = Reader{tokens:tokens,pos:0,errors:Vec::new()};
     let mut reader = Reader{tokens:tokens,pos:0};
     return read_form(&mut reader);

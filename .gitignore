@@ -12,6 +12,8 @@
 .sbt
 .npm
 .node-gyp
+**/*.swp
+impls/rust.2/target
 package-lock.json
 */experiments
 node_modules
