@@ -7,31 +7,22 @@ mod reader;
 mod printer;
 
 use crate::printer::pr_str;
-use crate::maltypes::{MalType, MalNumber};
+use crate::maltypes::{MalType, mal_add, mal_sub, mal_mul, mal_div};
 use crate::reader::read_str;
 use std::collections::HashMap;
-
-fn mal_add(a: MalNumber, b: MalNumber) -> MalNumber { a + b }
-fn mal_sub(a: MalNumber, b: MalNumber) -> MalNumber { a - b }
-fn mal_mul(a: MalNumber, b: MalNumber) -> MalNumber { a * b }
-fn mal_div(a: MalNumber, b: MalNumber) -> MalNumber { a / b }
 
 fn print(mt: MalType) -> String {
     return pr_str(&mt)
 }
 
-fn eval_ast(mt: &MalType, repl_env: &HashMap<String, maltypes::MalType>) -> Result<MalType, &'static str> {
+fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType, &'static str> {
     match mt {
         MalType::Symbol(sym) => {
             match repl_env.get(sym) {
                 Some(value) => match value {
-                    maltypes::MalType::Number(v) => {
-                        Ok(MalType::Number(*v))
-                    }
-                    maltypes::MalType::Operator(op) => {
-                        Ok(MalType::Operator(*op))
-                    }
-                    _ => Err("symbol value not handled")
+                    MalType::Number(v) => Ok(MalType::Number(*v)),
+                    MalType::Operator(op) => Ok(MalType::Operator(*op)),
+                    _ => Err("symbol value not handled"),
                 }
                 None => Err("symbol not defined")
             }
@@ -52,7 +43,7 @@ fn eval_ast(mt: &MalType, repl_env: &HashMap<String, maltypes::MalType>) -> Resu
     }
 }
 
-fn eval(mt: &MalType, repl_env: &HashMap<String, maltypes::MalType>) -> Result<MalType, &'static str> {
+fn eval(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType, &'static str> {
     match mt {
         MalType::List(list) => match list.len() {
             0 => {
@@ -62,11 +53,11 @@ fn eval(mt: &MalType, repl_env: &HashMap<String, maltypes::MalType>) -> Result<M
             _ => {
                 match eval_ast(mt, repl_env) {
                     Ok(result) => match result {
-                        maltypes::MalType::List(elist) =>  match elist[0] {
-                            maltypes::MalType::Operator(f) => {
-                                if let maltypes::MalType::Number(a) = elist[1] {
-                                    if let maltypes::MalType::Number(b) = elist[2] {
-                                        Ok(maltypes::MalType::Number(f(a, b)))
+                        MalType::List(elist) =>  match elist[0] {
+                            MalType::Operator(f) => {
+                                if let MalType::Number(a) = elist[1] {
+                                    if let MalType::Number(b) = elist[2] {
+                                        Ok(MalType::Number(f(a, b)))
                                     } else {
                                         Err("Third argument is not a number")
                                     }
@@ -91,11 +82,11 @@ fn read(buffer: String) -> Result<MalType, &'static str> {
 }
 
 fn rep(buffer: String) -> Result<String, &'static str> {
-    let mut repl_env = HashMap::<String, maltypes::MalType>::new();
-    repl_env.insert("+".to_string(),maltypes::MalType::Operator(mal_add));
-    repl_env.insert("-".to_string(),maltypes::MalType::Operator(mal_sub));
-    repl_env.insert("*".to_string(),maltypes::MalType::Operator(mal_mul));
-    repl_env.insert("/".to_string(),maltypes::MalType::Operator(mal_div));
+    let mut repl_env = HashMap::<String, MalType>::new();
+    repl_env.insert("+".to_string(),MalType::Operator(mal_add));
+    repl_env.insert("-".to_string(),MalType::Operator(mal_sub));
+    repl_env.insert("*".to_string(),MalType::Operator(mal_mul));
+    repl_env.insert("/".to_string(),MalType::Operator(mal_div));
     match read(buffer) {
         Ok(mt) => match eval(&mt, &repl_env) {
             Ok(result) => Ok(print(result)),

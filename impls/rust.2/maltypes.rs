@@ -1,5 +1,4 @@
 
-
 pub type MalNumber = i64;
 pub type MalOperatorType = fn(MalNumber, MalNumber) -> MalNumber;
 
@@ -27,3 +26,9 @@ impl MalType {
         }
     }
 }
+
+pub fn mal_add(a: MalNumber, b: MalNumber) -> MalNumber { a + b }
+pub fn mal_sub(a: MalNumber, b: MalNumber) -> MalNumber { a - b }
+pub fn mal_mul(a: MalNumber, b: MalNumber) -> MalNumber { a * b }
+pub fn mal_div(a: MalNumber, b: MalNumber) -> MalNumber { a / b }
+
