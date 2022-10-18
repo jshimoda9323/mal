@@ -30,6 +30,9 @@ pub fn pr_str(maltype: &MalType) -> String {
             //println!("pr_str: Found atom: {}", &a);
             a.to_string()
         }
+        MalType::Operator(_) => {
+            String::from("function-call")
+        }
     }
 }
 

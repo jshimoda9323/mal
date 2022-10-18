@@ -68,6 +68,16 @@ fn read_atom(reader: &mut Reader) -> Result<MalType, &'static str> {
                 Err(_parse_int_error) => Err("failed to convert string to integer")
             }
         }
+        "-" => {
+            if new_token.len() > 1 {
+                match new_token.parse::<i64>() {
+                    Ok(val) => Ok(MalType::Number(val)),
+                    Err(_parse_int_error) => Err("failed to convert string to integer")
+                }
+            } else {
+                Ok(MalType::Symbol(new_token))
+            }
+        }
         "\"" => {
             match new_token.len() {
                 1 => Err("unbalanced string"),
