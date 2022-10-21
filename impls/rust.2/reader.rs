@@ -109,16 +109,64 @@ fn read_atom(reader: &mut Reader) -> Result<MalType, &'static str> {
             match new_token.len() {
                 1 => Err("unbalanced string"),
                 2 => match &new_token[new_token.len()-1..new_token.len()] {
-                    "\"" => Ok(MalType::Str(new_token)),
+                    "\"" => Ok(MalType::Str(String::new())),
                     _    => Err("unbalanced string")
                 }
-                _ => match &new_token[new_token.len()-2..new_token.len()] {
-                    "\\\"" => Err("unbalanced string"),
-                    _      => match &new_token[new_token.len()-1..new_token.len()] {
-                        "\"" => Ok(MalType::Str(new_token)),
-                        _    => Err("unbalanced string")
+                _ => {
+                    let sl = &new_token[1..new_token.len()];
+                    let mut is_escape = false;
+                    let mut new_string = String::new();
+                    let mut c_count = 0;
+                    let mut found_end = false;
+                    for c in sl.as_bytes() {
+                        match c {
+                            b'n' => match is_escape {
+                                true => {
+                                    new_string.push_str("\n");
+                                    is_escape = false;
+                                }
+                                _ => new_string.push_str("n"),
+                            }
+                            b'"' => match is_escape {
+                                true => {
+                                    new_string.push_str("\"");
+                                    is_escape = false;
+                                }
+                                _ => {
+                                    if c_count == new_token.len()-2 {
+                                        found_end = true;
+                                    } else {
+                                        return Err("Internal Error: found doublequote in middle of string");
+                                    }
+                                }
+                            }
+                            b'\\' => match is_escape {
+                                true => {
+                                    new_string.push_str("\\");
+                                    is_escape = false;
+                                }
+                                _ => is_escape = true,
+                            }
+                            _ => {
+                                is_escape = false;
+                                new_string.push(*c as char);
+                            }
+                        }
+                        c_count += 1;
+                    }
+                    if found_end {
+                        Ok(MalType::Str(new_string))
+                    } else {
+                        Err("unbalanced string: no terminating doublequote found for string")
                     }
                 }
+                //_ => match &new_token[new_token.len()-2..new_token.len()] {
+                //    "\\\"" => Err("unbalanced string"),
+                //    _      => match &new_token[new_token.len()-1..new_token.len()] {
+                //        "\"" => Ok(MalType::Str(new_token)),
+                //        _    => Err("unbalanced string")
+                //    }
+                //}
             }
         }
         _   => Ok(MalType::Symbol(new_token)),

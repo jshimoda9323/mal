@@ -11,7 +11,7 @@ use crate::maltypes::MalType;
 use crate::reader::read_str;
 
 fn print(mt: MalType) -> String {
-    return pr_str(&mt)
+    return pr_str(&mt, true)
 }
 
 fn eval(mt: MalType) -> MalType {

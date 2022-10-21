@@ -12,7 +12,7 @@ use crate::reader::read_str;
 use std::collections::HashMap;
 
 fn print(mt: MalType) -> String {
-    return pr_str(&mt)
+    return pr_str(&mt, true)
 }
 
 fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType, &'static str> {

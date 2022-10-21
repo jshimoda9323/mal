@@ -54,7 +54,7 @@ impl MalEnv {
             outline.push_str(format!("Environment {}:\n", env_count).as_str());
             for (sym_name, maltype) in env.iter() {
                 outline.push_str(format!("sym: {} => ", sym_name).as_str());
-                outline.push_str(pr_str(maltype).as_str());
+                outline.push_str(pr_str(maltype, true).as_str());
                 outline.push_str("\n")
             }
         }

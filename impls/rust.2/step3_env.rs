@@ -13,7 +13,7 @@ use crate::maltypes::{MalType};
 use crate::reader::read_str;
 
 fn print(mt: MalType) -> String {
-    return pr_str(&mt)
+    return pr_str(&mt, true)
 }
 
 fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str> {
