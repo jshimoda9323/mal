@@ -18,6 +18,23 @@ fn print(mt: MalType) -> String {
 fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType, &'static str> {
     match mt {
         MalType::Boolean(b) => Ok(MalType::Boolean(*b)),
+        MalType::Dictionary(str_dict, key_dict) => {
+            let mut new_str_dict = HashMap::<String, MalType>::new();
+            let mut new_key_dict = HashMap::<String, MalType>::new();
+            for (key, val) in str_dict.iter() {
+                match eval(val, repl_env) {
+                    Ok(result) => { let _ = new_str_dict.insert(key.to_string(), result); }
+                    Err(err_str) => return Err(err_str)
+                }
+            }
+            for (key, val) in key_dict.iter() {
+                match eval(val, repl_env) {
+                    Ok(result) => { let _ = new_key_dict.insert(key.to_string(), result); }
+                    Err(err_str) => return Err(err_str)
+                }
+            }
+            Ok(MalType::Dictionary(new_str_dict, new_key_dict))
+        }
         MalType::Keyword(k) => Ok(MalType::Keyword(k.to_string())),
         MalType::List(list) => {
             let mut new_list: Vec<MalType> = Vec::new();

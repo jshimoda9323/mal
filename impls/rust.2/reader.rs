@@ -1,5 +1,6 @@
 use regex::Regex;
 use crate::maltypes::MalType;
+use std::collections::HashMap;
 
 struct Reader<'a> {
     tokens: Vec<&'a str>,
@@ -27,13 +28,69 @@ impl Reader<'_> {
     }
 }
 
+fn read_dict(reader: &mut Reader) -> Result<MalType, &'static str> {
+    let end_val: &str;
+    let mut found_end_val = false;
+    match reader.peek() {
+        "{" => end_val = "}",
+        _   => end_val = "",
+    }
+    reader.next();
+    let mut str_dict: HashMap<String, MalType> = HashMap::new();
+    let mut key_dict: HashMap<String, MalType> = HashMap::new();
+    let mut expect_key = true;
+    let mut last_key = MalType::Str(String::new());
+    while reader.is_eof() == false {
+        if reader.peek() == end_val {
+            reader.next();
+            found_end_val = true;
+            break;
+        }
+        match read_form(reader) {
+            Ok(maltype) => {
+                if expect_key {
+                    expect_key = false;
+                    match maltype {
+                        MalType::Str(_) => {},
+                        MalType::Keyword(_) => {},
+                        _ => return Err("Expecting string or keyword for hash key")
+                    }
+                    last_key = maltype;
+                } else {
+                    expect_key = true;
+                    match &last_key {
+                        MalType::Str(s) => {
+                            str_dict.insert(s.to_string(), maltype);
+                        }
+                        MalType::Keyword(k) => {
+                            key_dict.insert(k.to_string(), maltype);
+                        }
+                        _ => return Err("Internal Error: last_key invalid type")
+                    }
+                }
+            }
+            Err(err_str) => return Err(err_str)
+        }
+    }
+    if !found_end_val {
+        return Err("unbalanced hashmap");
+    }
+    if !expect_key {
+        return Err("unbalanced hashmap");
+    }
+    match end_val {
+        "}" => return Ok(MalType::Dictionary(str_dict, key_dict)),
+        _ => {},
+    }
+    return Err("Internal Error: unknown end_val")
+}
+
 fn read_list(reader: &mut Reader) -> Result<MalType, &'static str> {
     let end_val: &str;
     let mut found_end_val = false;
     match reader.peek() {
         "(" => end_val = ")",
         "[" => end_val = "]",
-        "{" => end_val = "}",
         _   => end_val = "",
     }
     reader.next();
@@ -49,15 +106,12 @@ fn read_list(reader: &mut Reader) -> Result<MalType, &'static str> {
             Err(err_str) => return Err(err_str)
         }
     }
-    //println!("read_list returning list len={}",list.len());
     if !found_end_val {
-        // TODO GEnerate Error messages!
         return Err("unbalanced list");
     }
     match end_val {
         ")" => return Ok(MalType::List(list)),
         "]" => return Ok(MalType::Vector(list)),
-        //"}" => return(Ok(MalType::Hash())),
         _ => {},
     }
     return Err("Internal Error: unknown end_val")
@@ -183,7 +237,7 @@ fn read_form(reader: &mut Reader) -> Result<MalType, &'static str> {
     match &token[0..1] {
         "(" => read_list(reader),
         "[" => read_list(reader),
-        "{" => read_list(reader),
+        "{" => read_dict(reader),
         _ => read_atom(reader),
     }
 }

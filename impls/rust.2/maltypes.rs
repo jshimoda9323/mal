@@ -1,10 +1,11 @@
+use std::collections::HashMap;
 
 pub type MalNumber = i64;
 pub type MalOperatorType = fn(MalNumber, MalNumber) -> MalNumber;
 
 pub enum MalType {
     Boolean(bool),
-    //Dictionary(HashMap<String>, HashMap<String>),
+    Dictionary(HashMap<String, MalType>, HashMap<String, MalType>),
     Keyword(String),
     List(Vec<MalType>),
     NoValue,
@@ -19,6 +20,17 @@ impl Clone for MalType {
     fn clone(&self) -> Self {
         match self {
             MalType::Boolean(b) => MalType::Boolean(*b),
+            MalType::Dictionary(str_dict, key_dict) => {
+                let mut new_str_dict = HashMap::<String, MalType>::new();
+                let mut new_key_dict = HashMap::<String, MalType>::new();
+                for (key, val) in str_dict.iter() {
+                    new_str_dict.insert(key.to_string(), val.clone());
+                }
+                for (key, val) in key_dict.iter() {
+                    new_key_dict.insert(key.to_string(), val.clone());
+                }
+                MalType::Dictionary(new_str_dict, new_key_dict)
+            }
             MalType::Keyword(k) => MalType::Keyword(k.clone()),
             MalType::List(list) => {
                 let mut new_list = Vec::<MalType>::new();
@@ -47,6 +59,11 @@ impl MalType {
     pub fn print(&self) {
         match self {
             MalType::Boolean(b) => println!("malprinter: Got a boolean: {}", b),
+            MalType::Dictionary(str_dict, key_dict) => {
+                println!("malprinter: Got a dictionary");
+                //for (key, val) in str_dict.iter() {
+                //}
+            }
             MalType::Keyword(k) => println!("malprinter: Got a keyword: {}", k),
             MalType::List(list) => {
                 println!("malprinter: Got a list");

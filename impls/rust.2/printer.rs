@@ -1,4 +1,25 @@
 use crate::maltypes::MalType;
+use std::collections::HashMap;
+
+fn format_string(in_str: &String) -> String {
+    let mut ret_str = String::from("\"");
+    for c in in_str.as_bytes() {
+        match c {
+            b'\n' => ret_str.push_str("\\n"),
+            b'\\' => ret_str.push_str("\\\\"),
+            b'"'  => ret_str.push_str("\\\""),
+            _ => ret_str.push(*c as char),
+        }
+    }
+    ret_str.push_str("\"");
+    ret_str
+}
+
+fn format_keyword(in_key: &String) -> String {
+    let mut ret_str = String::from(":");
+    ret_str.push_str(in_key);
+    ret_str
+}
 
 fn pr_mallist(mallist: &Vec<MalType>, print_readably: bool) -> String {
     let mut vals: Vec<String> = Vec::new();
@@ -10,11 +31,28 @@ fn pr_mallist(mallist: &Vec<MalType>, print_readably: bool) -> String {
     return ret;
 }
 
+fn pr_maldict(s: &HashMap<String, MalType>, k: &HashMap<String, MalType>, print_readably: bool) -> String {
+    let mut vals: Vec<String> = Vec::new();
+    for (key, val) in s.iter() {
+        vals.push(format_string(key));
+        vals.push(pr_str(val, print_readably));
+    }
+    for (key, val) in k.iter() {
+        vals.push(format_keyword(key));
+        vals.push(pr_str(val, print_readably));
+    }
+    let ret: String = vals.join(" ");
+    return ret;
+}
+
 pub fn pr_str(maltype: &MalType, print_readably: bool) -> String {
     match maltype {
         MalType::Boolean(b) => match b {
             true => String::from("true"),
             _ => String::from("false"),
+        }
+        MalType::Dictionary(s, k) => {
+            String::from("{")+&pr_maldict(&s, &k, print_readably)+"}"
         }
         MalType::Keyword(k) => {
             String::from(":")+k.as_str()
@@ -37,17 +75,7 @@ pub fn pr_str(maltype: &MalType, print_readably: bool) -> String {
         }
         MalType::Str(a) => {
             if print_readably {
-                let mut ret_str = String::from("\"");
-                for c in a.as_bytes() {
-                    match c {
-                        b'\n' => ret_str.push_str("\\n"),
-                        b'\\' => ret_str.push_str("\\\\"),
-                        b'"'  => ret_str.push_str("\\\""),
-                        _ => ret_str.push(*c as char),
-                    }
-                }
-                ret_str.push_str("\"");
-                ret_str
+                format_string(a)
             } else {
                 a.to_string()
             }
