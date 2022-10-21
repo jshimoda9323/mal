@@ -31,7 +31,10 @@ pub fn pr_str(maltype: &MalType) -> String {
             a.to_string()
         }
         MalType::Operator(_) => {
-            String::from("function-call")
+            String::from("internal function-call")
+        }
+        MalType::NoValue => {
+            String::from("")
         }
     }
 }

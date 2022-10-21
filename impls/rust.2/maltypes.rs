@@ -8,6 +8,26 @@ pub enum MalType {
     Symbol(String),
     Str(String),
     Operator(MalOperatorType),
+    NoValue,
+}
+
+impl Clone for MalType {
+    fn clone(&self) -> Self {
+        match self {
+            MalType::List(list) => {
+                let mut new_list = Vec::<MalType>::new();
+                for maltype in list.iter() {
+                    new_list.push(maltype.clone());
+                }
+                MalType::List(new_list)
+            }
+            MalType::Number(n) => MalType::Number(*n),
+            MalType::Symbol(s) => MalType::Symbol(s.clone()),
+            MalType::Str(s) => MalType::Str(s.clone()),
+            MalType::Operator(op) => MalType::Operator(*op),
+            MalType::NoValue => MalType::NoValue,
+        }
+    }
 }
 
 impl MalType {
@@ -23,6 +43,7 @@ impl MalType {
             MalType::Symbol(sym) => println!("malprinter: Got a symbol: {}", sym),
             MalType::Str(s) => println!("malprinter: Got a string: {}", s),
             MalType::Operator(_) => println!("malprinter: Got an operator"),
+            MalType::NoValue => println!("malprinter: Got a NoValue"),
         }
     }
 }

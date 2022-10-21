@@ -40,6 +40,7 @@ fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType
         MalType::Number(n) => Ok(MalType::Number(*n)),
         MalType::Str(s) => Ok(MalType::Str(s.to_string())),
         MalType::Operator(op) => Ok(MalType::Operator(*op)),
+        MalType::NoValue => Ok(MalType::NoValue),
     }
 }
 
