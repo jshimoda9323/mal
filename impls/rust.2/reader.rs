@@ -54,7 +54,13 @@ fn read_list(reader: &mut Reader) -> Result<MalType, &'static str> {
         // TODO GEnerate Error messages!
         return Err("unbalanced list");
     }
-    return Ok(MalType::List(list));
+    match end_val {
+        ")" => return Ok(MalType::List(list)),
+        "]" => return Ok(MalType::Vector(list)),
+        //"}" => return(Ok(MalType::Hash())),
+        _ => {},
+    }
+    return Err("Internal Error: unknown end_val")
 }
 
 fn read_atom(reader: &mut Reader) -> Result<MalType, &'static str> {

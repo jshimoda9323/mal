@@ -37,6 +37,16 @@ fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType
             }
             Ok(MalType::List(new_list))
         }
+        MalType::Vector(vec) => {
+            let mut new_vec: Vec<MalType> = Vec::new();
+            for sexpr in vec {
+                match eval(sexpr, repl_env) {
+                    Ok(result) => new_vec.push(result),
+                    Err(err_str) => return Err(err_str)
+                }
+            }
+            Ok(MalType::Vector(new_vec))
+        }
         MalType::Number(n) => Ok(MalType::Number(*n)),
         MalType::Str(s) => Ok(MalType::Str(s.to_string())),
         MalType::Operator(op) => Ok(MalType::Operator(*op)),

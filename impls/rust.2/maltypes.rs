@@ -4,6 +4,7 @@ pub type MalOperatorType = fn(MalNumber, MalNumber) -> MalNumber;
 
 pub enum MalType {
     List(Vec<MalType>),
+    Vector(Vec<MalType>),
     Number(MalNumber),
     Symbol(String),
     Str(String),
@@ -20,6 +21,13 @@ impl Clone for MalType {
                     new_list.push(maltype.clone());
                 }
                 MalType::List(new_list)
+            }
+            MalType::Vector(list) => {
+                let mut new_list = Vec::<MalType>::new();
+                for maltype in list.iter() {
+                    new_list.push(maltype.clone());
+                }
+                MalType::Vector(new_list)
             }
             MalType::Number(n) => MalType::Number(*n),
             MalType::Symbol(s) => MalType::Symbol(s.clone()),
@@ -38,6 +46,14 @@ impl MalType {
                 for sexpr in list {
                     sexpr.print()
                 }
+                println!("] end list");
+            }
+            MalType::Vector(list) => {
+                println!("malprinter: Got a vector [");
+                for sexpr in list {
+                    sexpr.print()
+                }
+                println!("] end vector");
             }
             MalType::Number(n) => println!("malprinter: Got a number: {}", n),
             MalType::Symbol(sym) => println!("malprinter: Got a symbol: {}", sym),

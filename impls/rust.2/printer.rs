@@ -14,10 +14,12 @@ pub fn pr_str(maltype: &MalType) -> String {
     match maltype {
         MalType::List(l) => {
             //println!("pr_str: Found start of list");
-            let r =String::from("(")+&pr_mallist(&l)+")";
+            String::from("(")+&pr_mallist(&l)+")"
             //println!("pr_str: Found List: {}", &r);
-            r
         },
+        MalType::Vector(v) => {
+            String::from("[")+&pr_mallist(&v)+"]"
+        }
         MalType::Number(a) => {
             //println!("pr_str: Found atom: {}", &a);
             a.to_string()
