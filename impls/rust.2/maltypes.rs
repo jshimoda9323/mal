@@ -4,6 +4,8 @@ pub type MalOperatorType = fn(MalNumber, MalNumber) -> MalNumber;
 
 pub enum MalType {
     Boolean(bool),
+    //Dictionary(HashMap<String>, HashMap<String>),
+    Keyword(String),
     List(Vec<MalType>),
     NoValue,
     Number(MalNumber),
@@ -17,6 +19,7 @@ impl Clone for MalType {
     fn clone(&self) -> Self {
         match self {
             MalType::Boolean(b) => MalType::Boolean(*b),
+            MalType::Keyword(k) => MalType::Keyword(k.clone()),
             MalType::List(list) => {
                 let mut new_list = Vec::<MalType>::new();
                 for maltype in list.iter() {
@@ -44,6 +47,7 @@ impl MalType {
     pub fn print(&self) {
         match self {
             MalType::Boolean(b) => println!("malprinter: Got a boolean: {}", b),
+            MalType::Keyword(k) => println!("malprinter: Got a keyword: {}", k),
             MalType::List(list) => {
                 println!("malprinter: Got a list");
                 for sexpr in list {

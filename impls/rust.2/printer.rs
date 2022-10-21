@@ -16,6 +16,9 @@ pub fn pr_str(maltype: &MalType, print_readably: bool) -> String {
             true => String::from("true"),
             _ => String::from("false"),
         }
+        MalType::Keyword(k) => {
+            String::from(":")+k.as_str()
+        }
         MalType::List(l) => {
             //println!("pr_str: Found start of list");
             String::from("(")+&pr_mallist(&l, print_readably)+")"

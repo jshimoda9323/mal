@@ -95,6 +95,10 @@ fn read_atom(reader: &mut Reader) -> Result<MalType, &'static str> {
                 Ok(MalType::Symbol(new_token))
             }
         }
+        ":" => {
+            let sl = &new_token[1..];
+            Ok(MalType::Keyword(sl.to_string()))
+        }
         "-" => {
             if new_token.len() > 1 {
                 match new_token.parse::<i64>() {

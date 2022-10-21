@@ -18,6 +18,7 @@ fn print(mt: MalType) -> String {
 fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType, &'static str> {
     match mt {
         MalType::Boolean(b) => Ok(MalType::Boolean(*b)),
+        MalType::Keyword(k) => Ok(MalType::Keyword(k.to_string())),
         MalType::List(list) => {
             let mut new_list: Vec<MalType> = Vec::new();
             for sexpr in list {
