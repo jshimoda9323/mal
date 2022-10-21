@@ -17,16 +17,7 @@ fn print(mt: MalType) -> String {
 
 fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType, &'static str> {
     match mt {
-        MalType::Symbol(sym) => {
-            match repl_env.get(sym) {
-                Some(value) => match value {
-                    MalType::Number(v) => Ok(MalType::Number(*v)),
-                    MalType::Operator(op) => Ok(MalType::Operator(*op)),
-                    _ => Err("symbol value not handled"),
-                }
-                None => Err("symbol not defined")
-            }
-        }
+        MalType::Boolean(b) => Ok(MalType::Boolean(*b)),
         MalType::List(list) => {
             let mut new_list: Vec<MalType> = Vec::new();
             for sexpr in list {
@@ -36,6 +27,20 @@ fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType
                 }
             }
             Ok(MalType::List(new_list))
+        }
+        MalType::NoValue => Ok(MalType::NoValue),
+        MalType::Number(n) => Ok(MalType::Number(*n)),
+        MalType::Operator(op) => Ok(MalType::Operator(*op)),
+        MalType::Str(s) => Ok(MalType::Str(s.to_string())),
+        MalType::Symbol(sym) => {
+            match repl_env.get(sym) {
+                Some(value) => match value {
+                    MalType::Number(v) => Ok(MalType::Number(*v)),
+                    MalType::Operator(op) => Ok(MalType::Operator(*op)),
+                    _ => Err("symbol value not handled"),
+                }
+                None => Err("symbol not defined")
+            }
         }
         MalType::Vector(vec) => {
             let mut new_vec: Vec<MalType> = Vec::new();
@@ -47,10 +52,6 @@ fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType
             }
             Ok(MalType::Vector(new_vec))
         }
-        MalType::Number(n) => Ok(MalType::Number(*n)),
-        MalType::Str(s) => Ok(MalType::Str(s.to_string())),
-        MalType::Operator(op) => Ok(MalType::Operator(*op)),
-        MalType::NoValue => Ok(MalType::NoValue),
     }
 }
 

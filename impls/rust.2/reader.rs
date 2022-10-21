@@ -74,6 +74,27 @@ fn read_atom(reader: &mut Reader) -> Result<MalType, &'static str> {
                 Err(_parse_int_error) => Err("failed to convert string to integer")
             }
         }
+        "f" => {
+            if new_token == "false" {
+                Ok(MalType::Boolean(false))
+            } else {
+                Ok(MalType::Symbol(new_token))
+            }
+        }
+        "n" => {
+            if new_token == "nil" {
+                Ok(MalType::NoValue)
+            } else {
+                Ok(MalType::Symbol(new_token))
+            }
+        }
+        "t" => {
+            if new_token == "true" {
+                Ok(MalType::Boolean(true))
+            } else {
+                Ok(MalType::Symbol(new_token))
+            }
+        }
         "-" => {
             if new_token.len() > 1 {
                 match new_token.parse::<i64>() {

@@ -9,10 +9,8 @@ mod env;
 
 use crate::env::{MalEnv};
 use crate::printer::pr_str;
-//use crate::maltypes::{MalType, mal_add, mal_sub, mal_mul, mal_div};
 use crate::maltypes::{MalType};
 use crate::reader::read_str;
-//use std::collections::HashMap;
 
 fn print(mt: MalType) -> String {
     return pr_str(&mt)
@@ -20,12 +18,7 @@ fn print(mt: MalType) -> String {
 
 fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str> {
     match mt {
-        MalType::Symbol(sym) => {
-            match repl_env.get(sym) {
-                Some(value) => Ok(value),
-                None => Err("symbol not defined")
-            }
-        }
+        MalType::Boolean(b) => Ok(MalType::Boolean(*b)),
         MalType::List(list) => {
             let mut new_list: Vec<MalType> = Vec::new();
             for sexpr in list {
@@ -35,6 +28,16 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str
                 }
             }
             Ok(MalType::List(new_list))
+        }
+        MalType::NoValue => Ok(MalType::NoValue),
+        MalType::Number(n) => Ok(MalType::Number(*n)),
+        MalType::Operator(op) => Ok(MalType::Operator(*op)),
+        MalType::Str(s) => Ok(MalType::Str(s.to_string())),
+        MalType::Symbol(sym) => {
+            match repl_env.get(sym) {
+                Some(value) => Ok(value),
+                None => Err("symbol not defined")
+            }
         }
         MalType::Vector(vec) => {
             let mut new_vec: Vec<MalType> = Vec::new();
@@ -46,10 +49,6 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str
             }
             Ok(MalType::Vector(new_vec))
         }
-        MalType::Number(n) => Ok(MalType::Number(*n)),
-        MalType::Str(s) => Ok(MalType::Str(s.to_string())),
-        MalType::Operator(op) => Ok(MalType::Operator(*op)),
-        MalType::NoValue => Ok(MalType::NoValue),
     }
 }
 

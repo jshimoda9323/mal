@@ -3,18 +3,20 @@ pub type MalNumber = i64;
 pub type MalOperatorType = fn(MalNumber, MalNumber) -> MalNumber;
 
 pub enum MalType {
+    Boolean(bool),
     List(Vec<MalType>),
-    Vector(Vec<MalType>),
-    Number(MalNumber),
-    Symbol(String),
-    Str(String),
-    Operator(MalOperatorType),
     NoValue,
+    Number(MalNumber),
+    Operator(MalOperatorType),
+    Str(String),
+    Symbol(String),
+    Vector(Vec<MalType>),
 }
 
 impl Clone for MalType {
     fn clone(&self) -> Self {
         match self {
+            MalType::Boolean(b) => MalType::Boolean(*b),
             MalType::List(list) => {
                 let mut new_list = Vec::<MalType>::new();
                 for maltype in list.iter() {
@@ -22,6 +24,11 @@ impl Clone for MalType {
                 }
                 MalType::List(new_list)
             }
+            MalType::NoValue => MalType::NoValue,
+            MalType::Number(n) => MalType::Number(*n),
+            MalType::Operator(op) => MalType::Operator(*op),
+            MalType::Str(s) => MalType::Str(s.clone()),
+            MalType::Symbol(s) => MalType::Symbol(s.clone()),
             MalType::Vector(list) => {
                 let mut new_list = Vec::<MalType>::new();
                 for maltype in list.iter() {
@@ -29,11 +36,6 @@ impl Clone for MalType {
                 }
                 MalType::Vector(new_list)
             }
-            MalType::Number(n) => MalType::Number(*n),
-            MalType::Symbol(s) => MalType::Symbol(s.clone()),
-            MalType::Str(s) => MalType::Str(s.clone()),
-            MalType::Operator(op) => MalType::Operator(*op),
-            MalType::NoValue => MalType::NoValue,
         }
     }
 }
@@ -41,6 +43,7 @@ impl Clone for MalType {
 impl MalType {
     pub fn print(&self) {
         match self {
+            MalType::Boolean(b) => println!("malprinter: Got a boolean: {}", b),
             MalType::List(list) => {
                 println!("malprinter: Got a list");
                 for sexpr in list {

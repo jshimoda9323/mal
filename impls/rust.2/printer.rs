@@ -12,6 +12,10 @@ fn pr_mallist(mallist: &Vec<MalType>) -> String {
 
 pub fn pr_str(maltype: &MalType) -> String {
     match maltype {
+        MalType::Boolean(b) => match b {
+            true => String::from("true"),
+            _ => String::from("false"),
+        }
         MalType::List(l) => {
             //println!("pr_str: Found start of list");
             String::from("(")+&pr_mallist(&l)+")"
@@ -36,7 +40,7 @@ pub fn pr_str(maltype: &MalType) -> String {
             String::from("internal function-call")
         }
         MalType::NoValue => {
-            String::from("")
+            String::from("nil")
         }
     }
 }
