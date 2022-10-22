@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::HashMap;
 use std::fmt;
 
@@ -72,19 +73,17 @@ impl MalType {
         }
     }
 
-    pub fn print(&self) {
+    pub fn _print(&self) {
         match self {
             MalType::Boolean(b) => println!("malprinter: Got a boolean: {}", b),
-            MalType::Dictionary(str_dict, key_dict) => {
+            MalType::Dictionary(_, _) => {
                 println!("malprinter: Got a dictionary");
-                //for (key, val) in str_dict.iter() {
-                //}
             }
             MalType::Keyword(k) => println!("malprinter: Got a keyword: {}", k),
             MalType::List(list) => {
                 println!("malprinter: Got a list");
                 for sexpr in list {
-                    sexpr.print()
+                    sexpr._print()
                 }
                 println!("] end list");
             }
@@ -96,7 +95,7 @@ impl MalType {
             MalType::Vector(list) => {
                 println!("malprinter: Got a vector [");
                 for sexpr in list {
-                    sexpr.print()
+                    sexpr._print()
                 }
                 println!("] end vector");
             }

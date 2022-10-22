@@ -47,7 +47,7 @@ impl MalEnv {
         return MalEnv(new_q);
     }
 
-    pub fn prt(&self) -> String {
+    pub fn _prt(&self) -> String {
         let mut outline = String::new();
         for (env_count, env) in self.0.iter().enumerate() {
             outline.push_str(format!("Environment {}:\n", env_count).as_str());
