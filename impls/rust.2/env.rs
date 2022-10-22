@@ -20,9 +20,8 @@ impl MalEnv {
 
     pub fn get(&self, sym: &String) -> Option<MalType> {
         for env in self.0.iter() {
-            match env.get(sym) {
-                Some(val) => return Some(val.clone()),
-                None => {}
+            if let Some(val) = env.get(sym) {
+                return Some(val.clone())
             }
         }
         None

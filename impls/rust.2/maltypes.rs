@@ -112,8 +112,6 @@ pub fn mal_div(a: MalNumber, b: MalNumber) -> MalNumber { a / b }
 pub enum MalErr {
     TypeErr1(String, String, String),
     ElementErr1(String, String),
-    //TypeErr2(&'static str, &'static str),
-    //InternalErr1(String),
     InternalErr2(&'static str),
     SymbolErr1(String),
     Generic1(String),
@@ -124,8 +122,6 @@ impl fmt::Display for MalErr {
         match self {
             MalErr::TypeErr1(s1, s2, s3) => write!(f, "Type Error: expected a(n) {} but got a(n) {} for {}.", s1, s2, s3),
             MalErr::ElementErr1(s1, s2) => write!(f, "List Element Error: expected {} but got {}.", s1, s2),
-            //MalErr::TypeErr2(s1, s2) => write!(f, "Type Error: {} is not a(n) {}", s1, s2),
-            //MalErr::InternalErr1(s) => write!(f, "Internal Error: {}", s),
             MalErr::InternalErr2(s) => write!(f, "Internal Error: {}.", s),
             MalErr::SymbolErr1(s) => write!(f, "Symbol Error: '{}' not found", s),
             MalErr::Generic1(s) => write!(f, "Generic Error: {}", s),
