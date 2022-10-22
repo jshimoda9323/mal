@@ -9,7 +9,7 @@ mod env;
 
 use crate::env::{MalEnv};
 use crate::printer::pr_str;
-use crate::maltypes::{MalType};
+use crate::maltypes::{MalType, MalErr};
 use crate::reader::read_str;
 use std::collections::HashMap;
 
@@ -17,7 +17,7 @@ fn print(mt: MalType) -> String {
     return pr_str(&mt, true)
 }
 
-fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str> {
+fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
     match mt {
         MalType::Boolean(b) => Ok(MalType::Boolean(*b)),
         MalType::Dictionary(str_dict, key_dict) => {
@@ -26,13 +26,13 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str
             for (key, val) in str_dict.iter() {
                 match eval(val, repl_env) {
                     Ok(result) => { let _ = new_str_dict.insert(key.to_string(), result); }
-                    Err(err_str) => return Err(err_str)
+                    Err(malerr) => return Err(malerr)
                 }
             }
             for (key, val) in key_dict.iter() {
                 match eval(val, repl_env) {
                     Ok(result) => { let _ = new_key_dict.insert(key.to_string(), result); }
-                    Err(err_str) => return Err(err_str)
+                    Err(malerr) => return Err(malerr)
                 }
             }
             Ok(MalType::Dictionary(new_str_dict, new_key_dict))
@@ -43,7 +43,7 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str
             for sexpr in list {
                 match eval(sexpr, repl_env) {
                     Ok(result) => new_list.push(result),
-                    Err(err_str) => return Err(err_str)
+                    Err(malerr) => return Err(malerr)
                 }
             }
             Ok(MalType::List(new_list))
@@ -55,7 +55,7 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str
         MalType::Symbol(sym) => {
             match repl_env.get(sym) {
                 Some(value) => Ok(value),
-                None => Err("symbol not found")
+                None => Err(MalErr::SymbolErr1(sym.to_string()))
             }
         }
         MalType::Vector(vec) => {
@@ -63,7 +63,7 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str
             for sexpr in vec {
                 match eval(sexpr, repl_env) {
                     Ok(result) => new_vec.push(result),
-                    Err(err_str) => return Err(err_str)
+                    Err(malerr) => return Err(malerr)
                 }
             }
             Ok(MalType::Vector(new_vec))
@@ -71,20 +71,20 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str
     }
 }
 
-fn apply(op: &MalType, arg1: &MalType, arg2: &MalType) -> Result<MalType, &'static str> {
+fn apply(op: &MalType, arg1: &MalType, arg2: &MalType) -> Result<MalType, MalErr> {
     match op {
         MalType::Operator(f) => match arg1 {
             MalType::Number(n1) => match arg2 {
                 MalType::Number(n2) => Ok(MalType::Number(f(*n1, *n2))),
-                _ => Err("Argument 2 is not a number")
+                _ => Err(MalErr::TypeErr1("number".to_string(), arg2.prt_type().to_string(), "argument 2".to_string()))
             }
-            _ => Err("Argument 1 is not a number")
+            _ => Err(MalErr::TypeErr1("number".to_string(), arg2.prt_type().to_string(), "argument 1".to_string()))
         }
-        _ => Err("Function name is not an operator")
+        _ => Err(MalErr::TypeErr1("operator".to_string(), arg2.prt_type().to_string(), "a function call".to_string()))
     }
 }
 
-fn handle_let_bindings(mt: &MalType, repl_env: &mut MalEnv) -> Result<bool, &'static str> {
+fn handle_let_bindings(mt: &MalType, repl_env: &mut MalEnv) -> Result<bool, MalErr> {
     match mt {
         MalType::List(list) => {
             match list.len() % 2 {
@@ -96,14 +96,14 @@ fn handle_let_bindings(mt: &MalType, repl_env: &mut MalEnv) -> Result<bool, &'st
                                     MalType::Symbol(sym) => {
                                         repl_env.set(sym, result);
                                     }
-                                    _ => return Err("Expected symbol in let binding")
+                                    _ => return Err(MalErr::TypeErr1("symbol".to_string(),pair[0].prt_type().to_string(),"let* binding".to_string()))
                                 }
                             }
-                            Err(err_str) => return Err(err_str)
+                            Err(malerr) => return Err(malerr)
                         }
                     }
                 }
-                _ => return Err("let* binding list has non-even number of arguments")
+                _ => return Err(MalErr::ElementErr1("an even number of list elements".to_string(), format!("{} list elements", list.len()).to_string()))
             }
         }
         MalType::Vector(vec) => {
@@ -116,22 +116,22 @@ fn handle_let_bindings(mt: &MalType, repl_env: &mut MalEnv) -> Result<bool, &'st
                                     MalType::Symbol(sym) => {
                                         repl_env.set(sym, result);
                                     }
-                                    _ => return Err("Expected symbol in let binding")
+                                    _ => return Err(MalErr::TypeErr1("symbol".to_string(),pair[0].prt_type().to_string(),"let* binding".to_string()))
                                 }
                             }
-                            Err(err_str) => return Err(err_str)
+                            Err(malerr) => return Err(malerr)
                         }
                     }
                 }
-                _ => return Err("let* binding list has non-even number of arguments")
+                _ => return Err(MalErr::ElementErr1("an even number of list elements".to_string(), format!("{} list elements", vec.len()).to_string()))
             }
         }
-        _ => return Err("Expected list of let* bindings")
+        _ => return Err(MalErr::TypeErr1("list or vector".to_string(), mt.prt_type().to_string(), "let* binding list".to_string()))
     }
     Ok(true)
 }
 
-fn eval(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str> {
+fn eval(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
     match mt {
         MalType::List(list) => match list.len() {
             0 => {
@@ -149,11 +149,11 @@ fn eval(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str> {
                                             repl_env.set(def_sym, evald_second.clone());
                                             Ok(evald_second)
                                         }
-                                        _ => Err("Argument 1 to def! must be a symbol")
+                                        _ => Err(MalErr::TypeErr1("symbol".to_string(), list[1].prt_type().to_string(), "argument 1 to def!".to_string()))
                                     }
-                                    Err(err_str) => Err(err_str)
+                                    Err(malerr) => Err(malerr)
                                 }
-                                _ => Err("Expected 2 arguments for def!")
+                                _ => Err(MalErr::ElementErr1("2 arguments for def!".to_string(), format!("{} argument(s)", list.len()-1).to_string()))
                             }
                         }
                         "let*" => {
@@ -161,9 +161,9 @@ fn eval(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str> {
                                 3 => {
                                     repl_env.new_env();
                                     match handle_let_bindings(&list[1], repl_env) {
-                                        Err(err_str) => {
+                                        Err(malerr) => {
                                             repl_env.drop_env();
-                                            return Err(err_str);
+                                            return Err(malerr);
                                         }
                                         _ => {}
                                     }
@@ -172,19 +172,19 @@ fn eval(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str> {
                                             repl_env.drop_env();
                                             Ok(result)
                                         }
-                                        Err(err_str) => {
+                                        Err(malerr) => {
                                             repl_env.drop_env();
-                                            Err(err_str)
+                                            Err(malerr)
                                         }
                                     }
                                 }
-                                _ => Err("Expected 2 arguments for let*")
+                                _ => Err(MalErr::ElementErr1("2 arguments for let*".to_string(), format!("{} argument(s)", list.len()-1)))
                             }
                         }
                         _ => match eval_ast(mt, repl_env) {
                             Ok(result) => match result {
                                 MalType::List(evald_list) => apply(&evald_list[0], &evald_list[1], &evald_list[2]),
-                                _ => Err("Internal error: list not returned")
+                                _ => Err(MalErr::InternalErr2("list not returned"))
                             }
                             Err(err_str) => Err(err_str)
                         }
@@ -192,7 +192,7 @@ fn eval(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, &'static str> {
                     _ => match eval_ast(mt, repl_env) {
                         Ok(result) => match result {
                             MalType::List(evald_list) => apply(&evald_list[0], &evald_list[1], &evald_list[2]),
-                            _ => Err("Internal error: list not returned")
+                            _ => Err(MalErr::InternalErr2("list not returned"))
                         }
                         Err(err_str) => Err(err_str)
                     }
@@ -207,13 +207,13 @@ fn read(buffer: String) -> Result<MalType, &'static str> {
     return read_str(buffer);
 }
 
-fn rep(buffer: String, repl_env: &mut MalEnv) -> Result<String, &'static str> {
+fn rep(buffer: String, repl_env: &mut MalEnv) -> Result<String, MalErr> {
     match read(buffer) {
         Ok(mt) => match eval(&mt, repl_env) {
             Ok(result) => Ok(print(result)),
-            Err(err_str) => Err(err_str)
+            Err(malerr) => Err(malerr)
         }
-        Err(err_str) => Err(err_str)
+        Err(err_str) => Err(MalErr::Generic1(err_str.to_string()))
     }
 }
 
@@ -233,7 +233,7 @@ fn main() {
                 }
                 match rep(buffer.trim_end().to_string(), &mut repl_env) {
                     Ok(out_str) => println!("{}", out_str),
-                    Err(err_str) => println!("Error: {}", err_str)
+                    Err(malerr) => println!("{}", malerr)
                 }
             },
             Err(_) => continue,

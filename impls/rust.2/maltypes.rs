@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 
 pub type MalNumber = i64;
 pub type MalOperatorType = fn(MalNumber, MalNumber) -> MalNumber;
@@ -56,6 +57,21 @@ impl Clone for MalType {
 }
 
 impl MalType {
+    pub fn prt_type(&self) -> &'static str{
+        match self{
+            MalType::Boolean(_) => "boolean",
+            MalType::Dictionary(_, _) => "dictionary",
+            MalType::Keyword(_) => "keyword",
+            MalType::List(_) => "list",
+            MalType::NoValue => "nil",
+            MalType::Number(_) => "number",
+            MalType::Operator(_) => "operator",
+            MalType::Str(_) => "string",
+            MalType::Symbol(_) => "symbol",
+            MalType::Vector(_) => "vector",
+        }
+    }
+
     pub fn print(&self) {
         match self {
             MalType::Boolean(b) => println!("malprinter: Got a boolean: {}", b),
@@ -72,6 +88,11 @@ impl MalType {
                 }
                 println!("] end list");
             }
+            MalType::NoValue => println!("malprinter: Got a NoValue"),
+            MalType::Number(n) => println!("malprinter: Got a number: {}", n),
+            MalType::Operator(_) => println!("malprinter: Got an operator"),
+            MalType::Str(s) => println!("malprinter: Got a string: {}", s),
+            MalType::Symbol(sym) => println!("malprinter: Got a symbol: {}", sym),
             MalType::Vector(list) => {
                 println!("malprinter: Got a vector [");
                 for sexpr in list {
@@ -79,11 +100,6 @@ impl MalType {
                 }
                 println!("] end vector");
             }
-            MalType::Number(n) => println!("malprinter: Got a number: {}", n),
-            MalType::Symbol(sym) => println!("malprinter: Got a symbol: {}", sym),
-            MalType::Str(s) => println!("malprinter: Got a string: {}", s),
-            MalType::Operator(_) => println!("malprinter: Got an operator"),
-            MalType::NoValue => println!("malprinter: Got a NoValue"),
         }
     }
 }
@@ -93,3 +109,26 @@ pub fn mal_sub(a: MalNumber, b: MalNumber) -> MalNumber { a - b }
 pub fn mal_mul(a: MalNumber, b: MalNumber) -> MalNumber { a * b }
 pub fn mal_div(a: MalNumber, b: MalNumber) -> MalNumber { a / b }
 
+pub enum MalErr {
+    TypeErr1(String, String, String),
+    ElementErr1(String, String),
+    //TypeErr2(&'static str, &'static str),
+    //InternalErr1(String),
+    InternalErr2(&'static str),
+    SymbolErr1(String),
+    Generic1(String),
+}
+
+impl fmt::Display for MalErr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            MalErr::TypeErr1(s1, s2, s3) => write!(f, "Type Error: expected a(n) {} but got a(n) {} for {}.", s1, s2, s3),
+            MalErr::ElementErr1(s1, s2) => write!(f, "List Element Error: expected {} but got {}.", s1, s2),
+            //MalErr::TypeErr2(s1, s2) => write!(f, "Type Error: {} is not a(n) {}", s1, s2),
+            //MalErr::InternalErr1(s) => write!(f, "Internal Error: {}", s),
+            MalErr::InternalErr2(s) => write!(f, "Internal Error: {}.", s),
+            MalErr::SymbolErr1(s) => write!(f, "Symbol Error: '{}' not found", s),
+            MalErr::Generic1(s) => write!(f, "Generic Error: {}", s),
+        }
+    }
+}
