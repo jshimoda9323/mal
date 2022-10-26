@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
@@ -35,6 +34,10 @@ fn eval_ast(mt: &MalType, repl_env: &HashMap<String, MalType>) -> Result<MalType
                 }
             }
             Ok(MalType::Dictionary(new_str_dict, new_key_dict))
+        }
+        MalType::Function(_, _) => {
+            assert!(false);
+            Ok(MalType::NoValue)
         }
         MalType::Keyword(k) => Ok(MalType::Keyword(k.to_string())),
         MalType::List(list) => {

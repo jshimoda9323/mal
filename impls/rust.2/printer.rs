@@ -54,6 +54,7 @@ pub fn pr_str(maltype: &MalType, print_readably: bool) -> String {
         MalType::Dictionary(s, k) => {
             String::from("{")+&pr_maldict(&s, &k, print_readably)+"}"
         }
+        MalType::Function(_, _) => String::from("#function"),
         MalType::Keyword(k) => {
             String::from(":")+k.as_str()
         }

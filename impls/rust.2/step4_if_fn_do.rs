@@ -33,10 +33,7 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
             }
             Ok(MalType::Dictionary(new_str_dict, new_key_dict))
         }
-        MalType::Function(_, _) => {
-            assert!(false);
-            Ok(MalType::NoValue)
-        }
+        MalType::Function(parms, body) => Ok(MalType::Function(parms.clone(), body.clone())),
         MalType::Keyword(k) => Ok(MalType::Keyword(k.to_string())),
         MalType::List(list) => {
             let mut new_list: Vec<MalType> = Vec::new();
@@ -62,11 +59,38 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
     }
 }
 
-fn apply(op: &MalType, arg1: &MalType, arg2: &MalType) -> Result<MalType, MalErr> {
-    let f = if let MalType::Operator(f1) = op { f1 } else { return Err(MalErr::TypeErr1("operator".to_string(), arg2.prt_type().to_string(), "a function call".to_string())) };
-    let n1 = if let MalType::Number(n) = arg1 { n } else { return Err(MalErr::TypeErr1("number".to_string(), arg2.prt_type().to_string(), "argument 1".to_string())) };
-    let n2 = if let MalType::Number(n) = arg2 { n } else { return Err(MalErr::TypeErr1("number".to_string(), arg2.prt_type().to_string(), "argument 2".to_string())) };
-    Ok(MalType::Number(f(*n1, *n2)))
+fn apply(list: &Vec<MalType>, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
+    if list.len() < 1 { return Err(MalErr::ElementErr1("at least 1 list element for function call".to_string(), format!("{} elements", list.len()))) }
+    match &list[0] {
+        MalType::Function(fparms, fbody) => {
+            if list.len()-1 != fparms.len() { return Err(MalErr::ElementErr1(format!("{} arguments for function call", fparms.len()), format!("{} arguments", list.len()-1))) }
+            //let evald_arg_list = eval(&list[1], repl_env)?;
+            //let args = if let MalType::List(arg_list) = evald_arg_list { arg_list } else { return Err(MalErr::TypeErr1("list".to_string(), evald_arg_list.prt_type().to_string(), "function argument list".to_string())) };
+            //if fparms.len() != args.len() { return Err(MalErr::ElementErr1(format!("{} arguments", fparms.len()), format!("{} arguments for function call", args.len()))) }
+            let mut env_pairs = Option::None;
+            if list.len() > 1 {
+                let mut pair_list = Vec::<(String, MalType)>::new();
+                for pair in list[1..].iter().zip(fparms.iter()) {
+                //for pair in fparms.iter().zip(args.iter()) {
+                    if let MalType::Symbol(sym) = pair.1 {
+                        pair_list.push((sym.to_string(), pair.0.clone()));
+                    } else { return Err(MalErr::TypeErr1("symbol".to_string(), format!("{}", pair.1.prt_type().to_string()), "parameter of function call".to_string())) }
+                }
+                env_pairs = Some(pair_list);
+            }
+            repl_env.new_env(env_pairs);
+            let ret_val = eval(fbody, repl_env)?;
+            repl_env.drop_env();
+            Ok(ret_val)
+        }
+        MalType::Operator(op) => {
+            if list.len() != 3 { return Err(MalErr::ElementErr1("3 list elements for operator function".to_string(), format!("{} list elements", list.len()))) }
+            let n1 = if let MalType::Number(n) = &list[1] { n } else { return Err(MalErr::TypeErr1("number".to_string(), list[1].prt_type().to_string(), "argument 1 of operator call".to_string())) };
+            let n2 = if let MalType::Number(n) = &list[2] { n } else { return Err(MalErr::TypeErr1("number".to_string(), list[2].prt_type().to_string(), "argument 2 of operator call".to_string())) };
+            Ok(MalType::Number(op(*n1, *n2)))
+        }
+        _ => Err(MalErr::TypeErr1("function or operator".to_string(), list[0].prt_type().to_string(), "first element of list".to_string()))
+    }
 }
 
 fn handle_let_bindings_internal(list: &Vec<MalType>, repl_env: &mut MalEnv) -> Result<bool, MalErr> {
@@ -111,6 +135,17 @@ fn eval_let(list: &Vec<MalType>, repl_env: &mut MalEnv) -> Result<MalType, MalEr
     eval_result
 }
 
+fn eval_if(list: &Vec<MalType>, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
+    if list.len() != 3 && list.len() != 4 { return Err(MalErr::ElementErr1("3 or 4 arguments for if".to_string(), format!("{} arguments", list.len()))) }
+    let cond_result = eval(&list[1], repl_env)?;
+    match cond_result {
+        MalType::Boolean(b) => if !b && list.len() == 4 { eval(&list[3], repl_env) } else { Ok(MalType::NoValue) }
+        MalType::NoValue => if list.len() == 4 { eval(&list[3], repl_env) } else { Ok(MalType::NoValue) }
+        _ => { eval(&list[2], repl_env) }
+    }
+
+}
+
 fn eval(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
     match mt {
         MalType::List(list) => {
@@ -121,17 +156,29 @@ fn eval(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
                 match &list[0] {
                     MalType::Symbol(sym) => match sym.as_str() {
                         "def!" => eval_def(list, repl_env),
+                        "do" => {
+                            for elem in list[1..list.len()-1].iter() {
+                                let _ = eval_ast(elem, repl_env)?;
+                            }
+                            eval_ast(&list[list.len()-1], repl_env)
+                        }
+                        "fn*" => {
+                            if list.len() != 3 { return Err(MalErr::ElementErr1("3 elements for a function definition".to_string(), format!("{} elements", list.len()))) }
+                            let parms = if let MalType::List(lp) = &list[1] { lp.clone() } else { return Err(MalErr::TypeErr1("list".to_string(), list[1].prt_type().to_string(), "list of parameter names".to_string())) };
+                            Ok(MalType::Function(parms, Box::new(list[2].clone())))
+                        }
+                        "if" => eval_if(list, repl_env),
                         "let*" => eval_let(list, repl_env),
                         _ => {
                             let result = eval_ast(mt, repl_env)?;
                             let evald_list = if let MalType::List(l) = result { l } else { return Err(MalErr::InternalErr2("list not returned")) };
-                            apply(&evald_list[0], &evald_list[1], &evald_list[2])
+                            apply(&evald_list, repl_env)
                         }
                     }
                     _ => {
                         let result = eval_ast(mt, repl_env)?;
                         let evald_list = if let MalType::List(l) = result { l } else { return Err(MalErr::InternalErr2("list not returned")) };
-                        apply(&evald_list[0], &evald_list[1], &evald_list[2])
+                        apply(&evald_list, repl_env)
                     }
                 }
             }

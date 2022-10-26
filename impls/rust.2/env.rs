@@ -27,8 +27,13 @@ impl MalEnv {
         None
     }
 
-    pub fn new_env(&mut self) {
-        let env = HashMap::<String, MalType>::new();
+    pub fn new_env(&mut self, binds_opt: Option<Vec<(String, MalType)>>) {
+        let mut env = HashMap::<String, MalType>::new();
+        if let Some(binds) = binds_opt {
+            for pair in binds.iter() {
+                env.insert(pair.0.clone(), pair.1.clone());
+            }
+        }
         self.0.push_front(env);
     }
 

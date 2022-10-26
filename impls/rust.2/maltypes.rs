@@ -8,6 +8,7 @@ pub type MalOperatorType = fn(MalNumber, MalNumber) -> MalNumber;
 pub enum MalType {
     Boolean(bool),
     Dictionary(HashMap<String, MalType>, HashMap<String, MalType>),
+    Function(Vec<MalType>, Box<MalType>),
     Keyword(String),
     List(Vec<MalType>),
     NoValue,
@@ -33,13 +34,17 @@ impl Clone for MalType {
                 }
                 MalType::Dictionary(new_str_dict, new_key_dict)
             }
+            MalType::Function(parms, body) => {
+                MalType::Function(parms.clone(), body.clone())
+            }
             MalType::Keyword(k) => MalType::Keyword(k.clone()),
             MalType::List(list) => {
-                let mut new_list = Vec::<MalType>::new();
-                for maltype in list.iter() {
-                    new_list.push(maltype.clone());
-                }
-                MalType::List(new_list)
+                MalType::List(list.clone())
+                //let mut new_list = Vec::<MalType>::new();
+                //for maltype in list.iter() {
+                //    new_list.push(maltype.clone());
+                //}
+                //MalType::List(new_list)
             }
             MalType::NoValue => MalType::NoValue,
             MalType::Number(n) => MalType::Number(*n),
@@ -62,6 +67,7 @@ impl MalType {
         match self{
             MalType::Boolean(_) => "boolean",
             MalType::Dictionary(_, _) => "dictionary",
+            MalType::Function(_, _) => "function",
             MalType::Keyword(_) => "keyword",
             MalType::List(_) => "list",
             MalType::NoValue => "nil",
@@ -79,6 +85,7 @@ impl MalType {
             MalType::Dictionary(_, _) => {
                 println!("malprinter: Got a dictionary");
             }
+            MalType::Function(_, _) => println!("malprinter: Got a function"),
             MalType::Keyword(k) => println!("malprinter: Got a keyword: {}", k),
             MalType::List(list) => {
                 println!("malprinter: Got a list");
