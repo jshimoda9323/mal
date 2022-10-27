@@ -3,17 +3,17 @@ use std::collections::HashMap;
 use std::fmt;
 
 pub type MalNumber = i64;
-pub type MalIntrinsicType = fn(&Vec<MalType>) -> Result<MalType, MalErr>;
+pub type MalOperatorType = fn(MalNumber, MalNumber) -> MalNumber;
 
 pub enum MalType {
     Boolean(bool),
     Dictionary(HashMap<String, MalType>, HashMap<String, MalType>),
     Function(Vec<MalType>, Box<MalType>),
-    Intrinsic(MalIntrinsicType),
     Keyword(String),
     List(Vec<MalType>),
     NoValue,
     Number(MalNumber),
+    Operator(MalOperatorType),
     Str(String),
     Symbol(String),
     Vector(Vec<MalType>),
@@ -34,12 +34,21 @@ impl Clone for MalType {
                 }
                 MalType::Dictionary(new_str_dict, new_key_dict)
             }
-            MalType::Function(parms, body) => MalType::Function(parms.clone(), body.clone()),
-            MalType::Intrinsic(ifn) => MalType::Intrinsic(ifn.clone()),
+            MalType::Function(parms, body) => {
+                MalType::Function(parms.clone(), body.clone())
+            }
             MalType::Keyword(k) => MalType::Keyword(k.clone()),
-            MalType::List(list) => MalType::List(list.clone()),
+            MalType::List(list) => {
+                MalType::List(list.clone())
+                //let mut new_list = Vec::<MalType>::new();
+                //for maltype in list.iter() {
+                //    new_list.push(maltype.clone());
+                //}
+                //MalType::List(new_list)
+            }
             MalType::NoValue => MalType::NoValue,
             MalType::Number(n) => MalType::Number(*n),
+            MalType::Operator(op) => MalType::Operator(*op),
             MalType::Str(s) => MalType::Str(s.clone()),
             MalType::Symbol(s) => MalType::Symbol(s.clone()),
             MalType::Vector(list) => {
@@ -59,48 +68,52 @@ impl MalType {
             MalType::Boolean(_) => "boolean",
             MalType::Dictionary(_, _) => "dictionary",
             MalType::Function(_, _) => "function",
-            MalType::Intrinsic(_) => "intrinsic",
             MalType::Keyword(_) => "keyword",
             MalType::List(_) => "list",
             MalType::NoValue => "nil",
             MalType::Number(_) => "number",
-            //MalType::Operator(_) => "operator",
+            MalType::Operator(_) => "operator",
             MalType::Str(_) => "string",
             MalType::Symbol(_) => "symbol",
             MalType::Vector(_) => "vector",
         }
     }
 
-    //pub fn _print(&self) {
-    //    match self {
-    //        MalType::Boolean(b) => println!("malprinter: Got a boolean: {}", b),
-    //        MalType::Dictionary(_, _) => {
-    //            println!("malprinter: Got a dictionary");
-    //        }
-    //        MalType::Function(_, _) => println!("malprinter: Got a function"),
-    //        MalType::Keyword(k) => println!("malprinter: Got a keyword: {}", k),
-    //        MalType::List(list) => {
-    //            println!("malprinter: Got a list");
-    //            for sexpr in list {
-    //                sexpr._print()
-    //            }
-    //            println!("] end list");
-    //        }
-    //        MalType::NoValue => println!("malprinter: Got a NoValue"),
-    //        MalType::Number(n) => println!("malprinter: Got a number: {}", n),
-    //        MalType::Operator(_) => println!("malprinter: Got an operator"),
-    //        MalType::Str(s) => println!("malprinter: Got a string: {}", s),
-    //        MalType::Symbol(sym) => println!("malprinter: Got a symbol: {}", sym),
-    //        MalType::Vector(list) => {
-    //            println!("malprinter: Got a vector [");
-    //            for sexpr in list {
-    //                sexpr._print()
-    //            }
-    //            println!("] end vector");
-    //        }
-    //    }
-    //}
+    pub fn _print(&self) {
+        match self {
+            MalType::Boolean(b) => println!("malprinter: Got a boolean: {}", b),
+            MalType::Dictionary(_, _) => {
+                println!("malprinter: Got a dictionary");
+            }
+            MalType::Function(_, _) => println!("malprinter: Got a function"),
+            MalType::Keyword(k) => println!("malprinter: Got a keyword: {}", k),
+            MalType::List(list) => {
+                println!("malprinter: Got a list");
+                for sexpr in list {
+                    sexpr._print()
+                }
+                println!("] end list");
+            }
+            MalType::NoValue => println!("malprinter: Got a NoValue"),
+            MalType::Number(n) => println!("malprinter: Got a number: {}", n),
+            MalType::Operator(_) => println!("malprinter: Got an operator"),
+            MalType::Str(s) => println!("malprinter: Got a string: {}", s),
+            MalType::Symbol(sym) => println!("malprinter: Got a symbol: {}", sym),
+            MalType::Vector(list) => {
+                println!("malprinter: Got a vector [");
+                for sexpr in list {
+                    sexpr._print()
+                }
+                println!("] end vector");
+            }
+        }
+    }
 }
+
+pub fn mal_add(a: MalNumber, b: MalNumber) -> MalNumber { a + b }
+pub fn mal_sub(a: MalNumber, b: MalNumber) -> MalNumber { a - b }
+pub fn mal_mul(a: MalNumber, b: MalNumber) -> MalNumber { a * b }
+pub fn mal_div(a: MalNumber, b: MalNumber) -> MalNumber { a / b }
 
 pub enum MalErr {
     TypeErr1(String, String, String),

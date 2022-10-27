@@ -2,13 +2,13 @@ use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
 
-mod maltypes;
-mod reader;
-mod printer;
+mod maltypes_step2;
+mod reader_step2;
+mod printer_step2;
 
-use crate::printer::pr_str;
-use crate::maltypes::{MalType, mal_add, mal_sub, mal_mul, mal_div};
-use crate::reader::read_str;
+use crate::printer_step2::pr_str;
+use crate::maltypes_step2::{MalType, mal_add, mal_sub, mal_mul, mal_div};
+use crate::reader_step2::read_str;
 use std::collections::HashMap;
 
 fn print(mt: MalType) -> String {

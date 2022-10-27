@@ -17,14 +17,14 @@ mal: stepA_mal
 STEP0_DEPS = Cargo.toml
 STEP1_DEPS = $(STEP0_DEPS) maltypes.rs reader.rs printer.rs
 STEP3_DEPS = $(STEP1_DEPS) env.rs
-#STEP4_DEPS = $(STEP3_DEPS) core.rs
+STEP4_DEPS = $(STEP3_DEPS) core.rs
 
 step0_repl: $(STEP0_DEPS)
 #step1_read_print step2_eval: $(STEP1_DEPS)
 step1_read_print: $(STEP1_DEPS)
 step2_eval: $(STEP1_DEPS)
 step3_env: $(STEP3_DEPS)
-step4_if_fn_do: $(STEP3_DEPS)
+step4_if_fn_do: $(STEP4_DEPS)
 #$(UPPER_STEPS): $(STEP4_DEPS)
 
 .PHONY: clean

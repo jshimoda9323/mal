@@ -6,11 +6,13 @@ mod maltypes;
 mod reader;
 mod printer;
 mod env;
+mod core;
 
 use crate::env::{MalEnv};
 use crate::printer::pr_str;
 use crate::maltypes::{MalType, MalErr};
 use crate::reader::read_str;
+use crate::core::{initialize_env};
 use std::collections::HashMap;
 
 fn print(mt: MalType) -> String {
@@ -34,6 +36,7 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
             Ok(MalType::Dictionary(new_str_dict, new_key_dict))
         }
         MalType::Function(parms, body) => Ok(MalType::Function(parms.clone(), body.clone())),
+        MalType::Intrinsic(ifunction) => Ok(MalType::Intrinsic(*ifunction)),
         MalType::Keyword(k) => Ok(MalType::Keyword(k.to_string())),
         MalType::List(list) => {
             let mut new_list: Vec<MalType> = Vec::new();
@@ -45,7 +48,6 @@ fn eval_ast(mt: &MalType, repl_env: &mut MalEnv) -> Result<MalType, MalErr> {
         }
         MalType::NoValue => Ok(MalType::NoValue),
         MalType::Number(n) => Ok(MalType::Number(*n)),
-        MalType::Operator(op) => Ok(MalType::Operator(*op)),
         MalType::Str(s) => Ok(MalType::Str(s.to_string())),
         MalType::Symbol(sym) => repl_env.get(sym).ok_or(MalErr::SymbolErr1(sym.to_string())),
         MalType::Vector(vec) => {
@@ -64,14 +66,10 @@ fn apply(list: &Vec<MalType>, repl_env: &mut MalEnv) -> Result<MalType, MalErr> 
     match &list[0] {
         MalType::Function(fparms, fbody) => {
             if list.len()-1 != fparms.len() { return Err(MalErr::ElementErr1(format!("{} arguments for function call", fparms.len()), format!("{} arguments", list.len()-1))) }
-            //let evald_arg_list = eval(&list[1], repl_env)?;
-            //let args = if let MalType::List(arg_list) = evald_arg_list { arg_list } else { return Err(MalErr::TypeErr1("list".to_string(), evald_arg_list.prt_type().to_string(), "function argument list".to_string())) };
-            //if fparms.len() != args.len() { return Err(MalErr::ElementErr1(format!("{} arguments", fparms.len()), format!("{} arguments for function call", args.len()))) }
             let mut env_pairs = Option::None;
             if list.len() > 1 {
                 let mut pair_list = Vec::<(String, MalType)>::new();
                 for pair in list[1..].iter().zip(fparms.iter()) {
-                //for pair in fparms.iter().zip(args.iter()) {
                     if let MalType::Symbol(sym) = pair.1 {
                         pair_list.push((sym.to_string(), pair.0.clone()));
                     } else { return Err(MalErr::TypeErr1("symbol".to_string(), format!("{}", pair.1.prt_type().to_string()), "parameter of function call".to_string())) }
@@ -83,12 +81,7 @@ fn apply(list: &Vec<MalType>, repl_env: &mut MalEnv) -> Result<MalType, MalErr> 
             repl_env.drop_env();
             Ok(ret_val)
         }
-        MalType::Operator(op) => {
-            if list.len() != 3 { return Err(MalErr::ElementErr1("3 list elements for operator function".to_string(), format!("{} list elements", list.len()))) }
-            let n1 = if let MalType::Number(n) = &list[1] { n } else { return Err(MalErr::TypeErr1("number".to_string(), list[1].prt_type().to_string(), "argument 1 of operator call".to_string())) };
-            let n2 = if let MalType::Number(n) = &list[2] { n } else { return Err(MalErr::TypeErr1("number".to_string(), list[2].prt_type().to_string(), "argument 2 of operator call".to_string())) };
-            Ok(MalType::Number(op(*n1, *n2)))
-        }
+        MalType::Intrinsic(ifunction) => ifunction(&list[1..].to_vec()),
         _ => Err(MalErr::TypeErr1("function or operator".to_string(), list[0].prt_type().to_string(), "first element of list".to_string()))
     }
 }
@@ -201,6 +194,7 @@ fn rep(buffer: String, repl_env: &mut MalEnv) -> Result<String, MalErr> {
 
 fn main() {
     let mut repl_env = MalEnv::new();
+    initialize_env(&mut repl_env);
     loop {
         //print!("{}", repl_env.prt());
         print!("user> ");

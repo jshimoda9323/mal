@@ -2,15 +2,15 @@ use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
 
-mod maltypes;
-mod reader;
-mod printer;
-mod env;
+mod maltypes_step3;
+mod reader_step3;
+mod printer_step3;
+mod env_step3;
 
-use crate::env::{MalEnv};
-use crate::printer::pr_str;
-use crate::maltypes::{MalType, MalErr};
-use crate::reader::read_str;
+use crate::env_step3::{MalEnv};
+use crate::printer_step3::pr_str;
+use crate::maltypes_step3::{MalType, MalErr};
+use crate::reader_step3::read_str;
 use std::collections::HashMap;
 
 fn print(mt: MalType) -> String {

@@ -1,4 +1,4 @@
-use crate::maltypes::MalType;
+use crate::maltypes_step2::MalType;
 use std::collections::HashMap;
 
 fn format_string(in_str: &String) -> String {
@@ -51,19 +51,42 @@ pub fn pr_str(maltype: &MalType, print_readably: bool) -> String {
             true => String::from("true"),
             _ => String::from("false"),
         }
-        MalType::Dictionary(s, k) => String::from("{")+&pr_maldict(&s, &k, print_readably)+"}",
-        MalType::Function(_, _) => String::from("#function"),
-        MalType::Intrinsic(_) => String::from("#intrinsic"),
-        MalType::Keyword(k) => String::from(":")+k.as_str(),
-        MalType::List(l) => String::from("(")+&pr_mallist(&l, print_readably)+")",
-        MalType::Vector(v) => String::from("[")+&pr_mallist(&v, print_readably)+"]",
-        MalType::Number(a) => a.to_string(),
-        MalType::Symbol(a) => a.to_string(),
-        MalType::Str(a) => {
-            if print_readably { format_string(a) }
-            else { a.to_string() }
+        MalType::Dictionary(s, k) => {
+            String::from("{")+&pr_maldict(&s, &k, print_readably)+"}"
         }
-        MalType::NoValue => String::from(""),
+        MalType::Function(_, _) => String::from("#function"),
+        MalType::Keyword(k) => {
+            String::from(":")+k.as_str()
+        }
+        MalType::List(l) => {
+            //println!("pr_str: Found start of list");
+            String::from("(")+&pr_mallist(&l, print_readably)+")"
+            //println!("pr_str: Found List: {}", &r);
+        },
+        MalType::Vector(v) => {
+            String::from("[")+&pr_mallist(&v, print_readably)+"]"
+        }
+        MalType::Number(a) => {
+            //println!("pr_str: Found atom: {}", &a);
+            a.to_string()
+        }
+        MalType::Symbol(a) => {
+            //println!("pr_str: Found atom: {}", &a);
+            a.to_string()
+        }
+        MalType::Str(a) => {
+            if print_readably {
+                format_string(a)
+            } else {
+                a.to_string()
+            }
+        }
+        MalType::Operator(_) => {
+            String::from("internal function-call")
+        }
+        MalType::NoValue => {
+            String::from("nil")
+        }
     }
 }
 

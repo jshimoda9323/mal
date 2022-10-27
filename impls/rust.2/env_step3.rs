@@ -1,5 +1,5 @@
-use crate::maltypes::{MalType};
-use crate::printer::pr_str;
+use crate::maltypes_step3::{MalType};
+use crate::printer_step3::pr_str;
 use std::collections::{HashMap, VecDeque};
 
 pub struct MalNameSpace(HashMap<String, MalType>);
